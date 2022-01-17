@@ -20,7 +20,7 @@
       </th>
     </thead>
     <tbody>
-      <tr v-for="(item, index) in items(orderKey, orderReverse, itemsFilter)" :key="index">
+      <tr v-for="(item, index) in itemsOnPage" :key="index">
         <td>{{ item.date }}</td>
         <td>{{ item.name }}</td>
         <td>{{ item.count }}</td>
@@ -28,11 +28,20 @@
       </tr>
     </tbody>
   </table>
+
+  <pagination v-model:page="page"
+              :lastPage="lastPage" />
+
+  <span class="count">
+    Всего записей:
+    {{ itemsCount }}
+  </span>
 </template>
 
 <script>
 import { mapGetters } from 'vuex';
 import FiltersFields from '@/components/FiltersFields.vue';
+import Pagination from '@/components/Pagination.vue';
 
 export default {
   data() {
@@ -40,6 +49,9 @@ export default {
       orderKey: 'count',
       orderReverse: false,
       showFilter: false,
+
+      perPage: 4,
+      page: 1,
 
       filter: {
         column: '',
@@ -49,11 +61,23 @@ export default {
     };
   },
   computed: {
+    allItems() {
+      return this.items(this.orderKey, this.orderReverse, this.itemsFilter);
+    },
+    itemsOnPage() {
+      return this.allItems.slice((this.page - 1) * this.perPage, this.page * this.perPage);
+    },
+    itemsCount() {
+      return this.allItems.length;
+    },
     itemsFilter() {
       if (this.filter.column && this.filter.condition && this.filter.value) {
         return this.filter;
       }
       return null;
+    },
+    lastPage() {
+      return Math.ceil(this.itemsCount / this.perPage); // Potential buggy
     },
     ...mapGetters([
       'items',
@@ -73,6 +97,7 @@ export default {
   },
   components: {
     FiltersFields,
+    Pagination,
   },
 };
 </script>
@@ -146,5 +171,9 @@ export default {
       background-color: #0b5ed7;
       border-color: #0a58ca;
     }
+  }
+
+  .count {
+    margin-left: .8rem;
   }
 </style>
